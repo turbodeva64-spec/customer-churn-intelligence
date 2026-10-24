@@ -1,0 +1,61 @@
+// =========================================================================
+// CUSTOMER CHURN INTELLIGENCE - VERIFIED DAX MEASURES
+// Model Grain: 1 row per customerID in Fact_Customer_Churn (7,043 rows)
+// =========================================================================
+
+Total Customers = COUNTROWS('Fact_Customer_Churn')
+
+Churned Customers = 
+CALCULATE(
+    COUNTROWS('Fact_Customer_Churn'),
+    'Fact_Customer_Churn'[Churn_Binary] = 1
+)
+
+Retained Customers = 
+CALCULATE(
+    COUNTROWS('Fact_Customer_Churn'),
+    'Fact_Customer_Churn'[Churn_Binary] = 0
+)
+
+Churn Rate = 
+DIVIDE([Churned Customers], [Total Customers], 0)
+
+Retention Rate = 
+DIVIDE([Retained Customers], [Total Customers], 0)
+
+Average Tenure (Months) = 
+AVERAGE('Fact_Customer_Churn'[tenure])
+
+Average Monthly Charges = 
+AVERAGE('Fact_Customer_Churn'[MonthlyCharges])
+
+Total Monthly Recurring Revenue (MRR) = 
+SUM('Fact_Customer_Churn'[MonthlyCharges])
+
+Monthly Revenue at Risk (Churned MRR) = 
+CALCULATE(
+    SUM('Fact_Customer_Churn'[MonthlyCharges]),
+    'Fact_Customer_Churn'[Churn_Binary] = 1
+)
+
+Predicted High-Risk Customers = 
+CALCULATE(
+    COUNTROWS('Fact_Customer_Churn'),
+    'Fact_Customer_Churn'[Predicted_Risk_Tier] = "High Risk"
+)
+
+Predicted High-Risk MRR Exposure = 
+CALCULATE(
+    SUM('Fact_Customer_Churn'[MonthlyCharges]),
+    'Fact_Customer_Churn'[Predicted_Risk_Tier] = "High Risk"
+)
+
+Expected Monthly Revenue Loss (Prob-Weighted) = 
+SUM('Fact_Customer_Churn'[Expected_Monthly_Revenue_Loss])
+
+MRR Risk Share % = 
+DIVIDE(
+    [Monthly Revenue at Risk (Churned MRR)],
+    CALCULATE([Monthly Revenue at Risk (Churned MRR)], ALL('Fact_Customer_Churn')),
+    0
+)

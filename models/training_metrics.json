@@ -1,0 +1,69 @@
+{
+  "train_rows": 5634,
+  "test_rows": 1409,
+  "train_churn_rate": 0.2653532126375577,
+  "test_churn_rate": 0.2654364797728886,
+  "feature_count": 47,
+  "cv_summary": {
+    "Logistic Regression": {
+      "accuracy_mean": 0.8026277342352495,
+      "accuracy_std": 0.005770055450068596,
+      "precision_mean": 0.6529864035311365,
+      "precision_std": 0.009175996065142425,
+      "recall_mean": 0.5464882943143812,
+      "recall_std": 0.02892541579991925,
+      "f1_mean": 0.5947410648718903,
+      "f1_std": 0.019451728268800046,
+      "roc_auc_mean": 0.8423522679103469,
+      "roc_auc_std": 0.005595703062947641,
+      "pr_auc_mean": 0.6496950630567646,
+      "pr_auc_std": 0.012327712928066644
+    },
+    "Random Forest": {
+      "accuracy_mean": 0.7981903889828385,
+      "accuracy_std": 0.007723965738515891,
+      "precision_mean": 0.6615661020607742,
+      "precision_std": 0.01582396089263546,
+      "recall_mean": 0.49096989966555177,
+      "recall_std": 0.050300825446209285,
+      "f1_mean": 0.5624131254411913,
+      "f1_std": 0.03346643202439166,
+      "roc_auc_mean": 0.8431562263782031,
+      "roc_auc_std": 0.00863413920679206,
+      "pr_auc_mean": 0.6598645183060358,
+      "pr_auc_std": 0.014144444003331483
+    }
+  },
+  "test_metrics_050": {
+    "Logistic Regression": {
+      "threshold": 0.5,
+      "accuracy": 0.8133427963094393,
+      "precision": 0.6907216494845361,
+      "recall": 0.5374331550802139,
+      "specificity": 0.9130434782608695,
+      "f1": 0.6045112781954888,
+      "roc_auc": 0.8575473404117906,
+      "pr_auc": 0.6843255186373486,
+      "tp": 201,
+      "tn": 945,
+      "fp": 90,
+      "fn": 173
+    },
+    "Random Forest": {
+      "threshold": 0.5,
+      "accuracy": 0.808374733853797,
+      "precision": 0.696969696969697,
+      "recall": 0.4919786096256685,
+      "specificity": 0.9227053140096618,
+      "f1": 0.5768025078369907,
+      "roc_auc": 0.865105014337751,
+      "pr_auc": 0.6868632177395262,
+      "tp": 184,
+      "tn": 955,
+      "fp": 80,
+      "fn": 190
+    }
+  },
+  "champion_model": "Random Forest",
+  "model_path": "/tmp/customer-churn-intelligence/models/churn_model_pipeline.pkl"
+}

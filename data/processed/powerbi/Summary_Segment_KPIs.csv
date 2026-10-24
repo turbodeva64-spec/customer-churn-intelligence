@@ -1,0 +1,21 @@
+customer_segment,Contract,InternetService,risk_tier,customer_count,churned_customers,total_mrr,churned_mrr,expected_mrr_at_risk,avg_churn_prob
+Established Month-to-Month (>12m),Month-to-month,DSL,Low Risk,509,86,27429.5,4411.65,5501.79,0.2067277013752456
+Established Month-to-Month (>12m),Month-to-month,DSL,Medium Risk,24,15,949.25,603.7,363.27,0.3832333333333333
+Established Month-to-Month (>12m),Month-to-month,Fiber optic,High Risk,66,48,6181.6,4482.85,3871.14,0.62585
+Established Month-to-Month (>12m),Month-to-month,Fiber optic,Low Risk,340,57,31564.95,5372.749999999999,8950.01,0.2838776470588235
+Established Month-to-Month (>12m),Month-to-month,Fiber optic,Medium Risk,806,414,72251.4,37448.1,33783.81,0.4679548387096774
+Established Month-to-Month (>12m),Month-to-month,No,Low Risk,136,11,2830.95,226.6,289.19,0.10248897058823529
+New Month-to-Month (<=12m),Month-to-month,DSL,High Risk,43,38,1458.4,1319.1499999999999,973.22,0.6687604651162791
+New Month-to-Month (<=12m),Month-to-month,DSL,Low Risk,256,51,13871.95,2751.65,3741.19,0.27291796875
+New Month-to-Month (<=12m),Month-to-month,DSL,Medium Risk,391,204,17709.35,9281.099999999999,8222.8,0.466739641943734
+New Month-to-Month (<=12m),Month-to-month,Fiber optic,High Risk,676,535,55784.8,44349.25,39576.96,0.7093738165680473
+New Month-to-Month (<=12m),Month-to-month,Fiber optic,Medium Risk,240,108,19398.35,8829.050000000001,10384.69,0.5349445833333333
+New Month-to-Month (<=12m),Month-to-month,No,Low Risk,367,73,7442.25,1469.6999999999998,1518.83,0.20463814713896455
+New Month-to-Month (<=12m),Month-to-month,No,Medium Risk,21,15,421.4,301.54999999999995,156.65,0.37172380952380957
+One-Year Contract,One year,DSL,Low Risk,570,53,34996.15,3356.2500000000005,3781.22,0.10740315789473684
+One-Year Contract,One year,Fiber optic,Low Risk,531,100,52455.1,10163.9,10204.93,0.1926632768361582
+One-Year Contract,One year,Fiber optic,Medium Risk,8,4,787.05,408.05,304.15,0.3853375
+One-Year Contract,One year,No,Low Risk,364,9,7578.3,190.25000000000003,218.81,0.028624175824175823
+Two-Year Contract,Two year,DSL,Low Risk,628,12,44250.75,805.7000000000002,1384.58,0.03285207006369427
+Two-Year Contract,Two year,Fiber optic,Low Risk,429,31,44861.15,3246.1,4250.14,0.0948960372960373
+Two-Year Contract,Two year,No,Low Risk,638,5,13893.95,113.5,161.0,0.011070219435736677
