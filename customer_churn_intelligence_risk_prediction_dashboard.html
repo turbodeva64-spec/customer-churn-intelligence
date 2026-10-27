@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Churn Intelligence & Risk Prediction Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .tab-btn.active {
+      background-color: #1e3a8a;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .heatmap-cell {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .heatmap-cell:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-lg shadow-inner">
+          CI
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight">Customer Churn Intelligence Platform</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-medium">IBM Telco N=7,043</span>
+          </div>
+          <p class="text-xs text-slate-400">Complete Repository Analytics, 13 Visuals Explorer, ML Threshold Simulator &amp; Power BI Star Schema</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex flex-wrap items-center gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700" role="tablist">
+        <button id="tabBtnOverview" data-target="viewOverview" class="tab-btn active text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg transition">
+          1. Executive &amp; EDA (Charts 1–5)
+        </button>
+        <button id="tabBtnSegments" data-target="viewSegments" class="tab-btn text-slate-300 hover:text-white text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg transition">
+          2. Distributions &amp; Heatmap (Charts 6–10)
+        </button>
+        <button id="tabBtnML" data-target="viewML" class="tab-btn text-slate-300 hover:text-white text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg transition">
+          3. ML &amp; Threshold Simulator (Charts 11–13)
+        </button>
+        <button id="tabBtnWorkbench" data-target="viewWorkbench" class="tab-btn text-slate-300 hover:text-white text-xs sm:text-sm font-medium px-3 py-1.5 rounded-lg transition">
+          4. Retention Workbench &amp; Code
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-6">
+
+    <!-- Global Executive KPI Strip -->
+    <section aria-label="Executive KPI Summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-blue-700">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Customers</p>
+        <p class="text-2xl font-bold text-slate-900 mt-1">7,043</p>
+        <p class="text-xs text-slate-600 mt-1"><span class="font-semibold text-emerald-600">5,174</span> Retained (73.46%)</p>
+      </div>
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-red-600">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Overall Churn Rate</p>
+        <p class="text-2xl font-bold text-red-600 mt-1">26.54%</p>
+        <p class="text-xs text-slate-600 mt-1"><span class="font-semibold text-red-600">1,869</span> Churned Customers</p>
+      </div>
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-indigo-700">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total Monthly MRR</p>
+        <p class="text-2xl font-bold text-slate-900 mt-1">$456,117</p>
+        <p class="text-xs text-slate-600 mt-1">Avg Charge: <span class="font-semibold">$64.76/mo</span></p>
+      </div>
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-orange-600">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Churned MRR Exposure</p>
+        <p class="text-2xl font-bold text-orange-600 mt-1">$139,131</p>
+        <p class="text-xs text-slate-600 mt-1"><span class="font-semibold text-orange-700">30.50%</span> of MRR ($1.67M/yr)</p>
+      </div>
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-rose-600">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">High-Risk Customers</p>
+        <p class="text-2xl font-bold text-rose-600 mt-1">785</p>
+        <p class="text-xs text-slate-600 mt-1">Prob &ge; 0.60 | <span class="font-semibold">$44.4K</span> E[Loss]</p>
+      </div>
+      <div class="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm border-t-4 border-t-teal-600">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Champion ROC-AUC</p>
+        <p class="text-2xl font-bold text-teal-700 mt-1">0.8575</p>
+        <p class="text-xs text-slate-600 mt-1">LogReg Test | RF: <span class="font-semibold">0.8651</span></p>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 1: EXECUTIVE & EDA DRIVERS (CHARTS 01 - 05)                     -->
+    <!-- =================================================================== -->
+    <div id="viewOverview" class="tab-view space-y-6">
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Primary Churn &amp; Revenue Exposure Drivers (Charts 01 – 05)</h2>
+          <p class="text-xs text-slate-500">Toggle between Churn Rate (%), Churned MRR ($), and Customer Volume across core dimensions from <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">src/eda.py</code>.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="edaMetricSelect" class="text-xs font-semibold text-slate-700">Display Metric:</label>
+          <select id="edaMetricSelect" class="text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
+            <option value="churn_rate">Churn Rate (%) &amp; Churned MRR Share (%)</option>
+            <option value="mrr_dollars">Churned MRR ($) vs Retained MRR ($)</option>
+            <option value="customer_counts">Churned vs Retained Customer Counts</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 1 of View 1: Chart 01 (Donut) + Chart 02 (Contract) + Chart 03 (Tenure Group) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Chart 01: Overall Churn Rate & MRR Split -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700">Visual 01</span>
+            <span class="text-xs text-slate-400">01_overall_churn_rate.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Overall Customer Churn vs MRR Exposure</h3>
+          <p class="text-xs text-slate-500 mb-3">26.54% of customers churn, but they account for 30.50% ($139.1K) of monthly revenue due to higher average billing ($74.44 vs $61.27).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart01Overall"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 02: Churn by Contract Type -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-50 text-red-700">Visual 02</span>
+            <span class="text-xs text-slate-400">02_churn_by_contract.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Churn by Contract Type</h3>
+          <p class="text-xs text-slate-500 mb-3">Month-to-month contracts drive <strong class="text-slate-800">42.71%</strong> churn and <strong class="text-slate-800">86.86% ($120.8K)</strong> of all lost MRR, vs 2.83% on Two-Year plans.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart02Contract"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 03: Churn by Tenure Group -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-orange-700">Visual 03</span>
+            <span class="text-xs text-slate-400">03_churn_by_tenure_group.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Churn Across Tenure Cohorts</h3>
+          <p class="text-xs text-slate-500 mb-3">First-year subscribers (0–12m) churn at <strong class="text-slate-800">47.44%</strong> ($68.95K MRR lost). Past 48 months, churn drops 5x to <strong class="text-slate-800">9.51%</strong>.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart03Tenure"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 of View 1: Chart 04 (Payment Method) + Chart 05 (Internet Service) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Chart 04: Churn by Payment Method -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800">Visual 04</span>
+            <span class="text-xs text-slate-400">04_churn_by_payment_method.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Payment Method Friction: Electronic Check vs Auto-Pay</h3>
+          <p class="text-xs text-slate-500 mb-3">Electronic check users experience <strong class="text-slate-800">45.29%</strong> churn (1,071 churners; <strong class="text-slate-800">$84,288.75 MRR</strong> or 60.58% of total loss), nearly 3x higher than Credit Card Auto-Pay (15.24%).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart04Payment"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 05: Churn by Internet Service Tier -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-50 text-purple-800">Visual 05</span>
+            <span class="text-xs text-slate-400">05_churn_by_internet_service.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Internet Service Tier &amp; Revenue Concentration</h3>
+          <p class="text-xs text-slate-500 mb-3">Fiber Optic subscribers pay $91.50/mo on average and churn at <strong class="text-slate-800">41.89%</strong>, generating <strong class="text-slate-800">82.15% ($114,300.05)</strong> of all churned MRR vs 18.96% for DSL.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart05Internet"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 2: DISTRIBUTIONS, SEGMENTS & HEATMAP (CHARTS 06 - 10)          -->
+    <!-- =================================================================== -->
+    <div id="viewSegments" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Chart 06: Monthly Charges Distribution by Churn -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-700">Visual 06</span>
+            <span class="text-xs text-slate-400">06_monthly_charges_by_churn.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Monthly Charges Density Distribution by Churn Status</h3>
+          <p class="text-xs text-slate-500 mb-3">Retained customers cluster around the $20 basic tier (mean $61.27, median $64.43), while churned customers skew heavily toward $70–$105 Fiber tiers (mean <strong class="text-slate-800">$74.44</strong>, median <strong class="text-slate-800">$79.65</strong>).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart06MonthlyDist"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 07: Tenure Distribution by Churn -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-50 text-teal-700">Visual 07</span>
+            <span class="text-xs text-slate-400">07_tenure_distribution_by_churn.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Customer Tenure Distribution by Churn Status</h3>
+          <p class="text-xs text-slate-500 mb-3">Churned subscribers exhibit a sharp early-life spike in months 1–5 (mean <strong class="text-slate-800">17.98 mo</strong>, median <strong class="text-slate-800">10.0 mo</strong>), whereas retained customers show a strong 60–72 month loyalty peak (median <strong class="text-slate-800">38.0 mo</strong>).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart07TenureDist"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Chart 08: Lifecycle Customer Segments -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">Visual 08</span>
+            <span class="text-xs text-slate-400">08_churn_by_customer_segment.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Engineered Lifecycle Customer Segments</h3>
+          <p class="text-xs text-slate-500 mb-3"><strong class="text-slate-800">New Month-to-Month (&le;12m)</strong> (High-Risk Newbie) hits <strong class="text-slate-800">51.35%</strong> churn ($68.08K MRR), followed by <strong class="text-slate-800">Established Month-to-Month (&gt;12m)</strong> at <strong class="text-slate-800">33.55%</strong> ($52.77K MRR).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart08Segments"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 09: Security & Tech Support Add-on Impact -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Visual 09</span>
+            <span class="text-xs text-slate-400">09_churn_by_security_tech_support.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Online Security &amp; Tech Support Protective Effect</h3>
+          <p class="text-xs text-slate-500 mb-3">Subscribers without Online Security or Tech Support churn at <strong class="text-slate-800">41.77%</strong> ($112.8K MRR) and <strong class="text-slate-800">41.64%</strong> ($110.7K MRR). Adding either service cuts churn bynearly two-thirds to <strong class="text-slate-800">14.61%–15.17%</strong>.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart09Security"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 10: Interactive Multi-Dimensional Matrix / Heatmap -->
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900">Visual 10</span>
+              <h3 class="text-sm font-bold text-slate-900">Contract Type &times; Tenure Cohort Churn Rate Heatmap (10_contract_tenure_churn_heatmap.png)</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Click any cell to inspect exact cohort metrics. First-year Month-to-month customers represent the single highest concentration of churn (51.35%).</p>
+          </div>
+          <div id="heatmapInspector" class="text-xs bg-slate-100 border border-slate-200 rounded-lg px-3.5 py-2 text-slate-700 font-medium">
+            Selected Cohort: <strong class="text-slate-900">Month-to-month &times; 0–12 Months</strong> &rarr; <span class="text-red-600 font-bold">51.35% Churn Rate</span> (1,024 / 1,994 churned | $68,080 MRR lost)
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
+                <th class="py-2.5 px-3">Contract Type</th>
+                <th class="py-2.5 px-3 text-center">0–12 Months</th>
+                <th class="py-2.5 px-3 text-center">13–24 Months</th>
+                <th class="py-2.5 px-3 text-center">25–48 Months</th>
+                <th class="py-2.5 px-3 text-center">49–72 Months</th>
+                <th class="py-2.5 px-3 text-center">Overall Contract</th>
+              </tr>
+            </thead>
+            <tbody class="text-xs divide-y divide-slate-200">
+              <tr>
+                <td class="py-3 px-3 font-bold text-slate-900">Month-to-month</td>
+                <td class="p-1.5"><button type="button" data-cohort="Month-to-month × 0–12 Months" data-rate="51.35%" data-detail="1,024 / 1,994 churned | $68,080 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-red-600 text-white font-bold text-center">51.35%<span class="block text-[10px] font-normal opacity-90">n=1,994</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Month-to-month × 13–24 Months" data-rate="37.72%" data-detail="278 / 737 churned | $21,840 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-orange-500 text-white font-bold text-center">37.72%<span class="block text-[10px] font-normal opacity-90">n=737</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Month-to-month × 25–48 Months" data-rate="32.92%" data-detail="264 / 802 churned | $22,890 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-amber-500 text-white font-bold text-center">32.92%<span class="block text-[10px] font-normal opacity-90">n=802</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Month-to-month × 49–72 Months" data-rate="26.02%" data-detail="89 / 342 churned | $8,037 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-amber-300 text-slate-900 font-bold text-center">26.02%<span class="block text-[10px] font-normal">n=342</span></button></td>
+                <td class="p-1.5 text-center font-bold text-red-700 bg-red-50 rounded-lg">42.71% (n=3,875)</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-3 font-bold text-slate-900">One year</td>
+                <td class="p-1.5"><button type="button" data-cohort="One year × 0–12 Months" data-rate="10.68%" data-detail="13 / 122 churned | $875 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-emerald-100 text-emerald-900 font-bold text-center">10.68%<span class="block text-[10px] font-normal">n=122</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="One year × 13–24 Months" data-rate="8.12%" data-detail="16 / 197 churned | $1,242 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-emerald-200 text-emerald-950 font-bold text-center">8.12%<span class="block text-[10px] font-normal">n=197</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="One year × 25–48 Months" data-rate="10.62%" data-detail="55 / 518 churned | $4,112 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-emerald-100 text-emerald-900 font-bold text-center">10.62%<span class="block text-[10px] font-normal">n=518</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="One year × 49–72 Months" data-rate="12.93%" data-detail="82 / 636 churned | $7,889 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-yellow-100 text-yellow-900 font-bold text-center">12.93%<span class="block text-[10px] font-normal">n=636</span></button></td>
+                <td class="p-1.5 text-center font-bold text-slate-700 bg-slate-100 rounded-lg">11.27% (n=1,473)</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-3 font-bold text-slate-900">Two year</td>
+                <td class="p-1.5"><button type="button" data-cohort="Two year × 0–12 Months" data-rate="0.00%" data-detail="0 / 70 churned | $0 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-teal-600 text-white font-bold text-center">0.00%<span class="block text-[10px] font-normal opacity-90">n=70</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Two year × 13–24 Months" data-rate="0.00%" data-detail="0 / 90 churned | $0 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-teal-600 text-white font-bold text-center">0.00%<span class="block text-[10px] font-normal opacity-90">n=90</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Two year × 25–48 Months" data-rate="2.19%" data-detail="6 / 274 churned | $460 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-teal-500 text-white font-bold text-center">2.19%<span class="block text-[10px] font-normal opacity-90">n=274</span></button></td>
+                <td class="p-1.5"><button type="button" data-cohort="Two year × 49–72 Months" data-rate="3.32%" data-detail="42 / 1,261 churned | $3,705 MRR lost" class="heatmap-cell w-full rounded-lg py-2.5 px-2 bg-teal-500 text-white font-bold text-center">3.32%<span class="block text-[10px] font-normal opacity-90">n=1,261</span></button></td>
+                <td class="p-1.5 text-center font-bold text-teal-800 bg-teal-50 rounded-lg">2.83% (n=1,695)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 3: ML EVALUATION & THRESHOLD SIMULATOR (CHARTS 11 - 13)        -->
+    <!-- =================================================================== -->
+    <div id="viewML" class="tab-view hidden space-y-6">
+      <!-- Interactive Threshold Simulator Card -->
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700">Interactive ROI &amp; Confusion Matrix Simulator</span>
+            <h2 class="text-base font-bold text-slate-900 mt-1">Decision Threshold Optimization Simulator (Held-Out Test Set N = 1,409)</h2>
+            <p class="text-xs text-slate-500">Slide the probability cut-off threshold (from <code class="bg-slate-100 px-1 rounded">src/evaluate_model.py</code>) to inspect real-time Confusion Matrix counts, Precision, Recall, F1, and Net Retention Campaign ROI ($150 save value vs $25 outreach cost).</p>
+          </div>
+          <div class="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200">
+            <label for="thresholdSlider" class="text-xs font-bold text-slate-700">Decision Threshold:</label>
+            <input id="thresholdSlider" type="range" min="0" max="9" step="1" value="2" class="w-36 accent-blue-700 cursor-pointer" />
+            <span id="thresholdBadge" class="text-sm font-extrabold px-2.5 py-1 rounded bg-blue-700 text-white">0.30</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <p class="text-[11px] text-slate-500 font-semibold">Flagged Customers</p>
+            <p id="simFlagged" class="text-lg font-bold text-slate-900">525 (37.3%)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+            <p class="text-[11px] text-emerald-700 font-semibold">Recall (Caught Churners)</p>
+            <p id="simRecall" class="text-lg font-bold text-emerald-800">78.34% (TP: 293)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-blue-50 border border-blue-200">
+            <p class="text-[11px] text-blue-700 font-semibold">Precision (Hit Rate)</p>
+            <p id="simPrecision" class="text-lg font-bold text-blue-800">55.81% (FP: 232)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+            <p class="text-[11px] text-indigo-700 font-semibold">F1-Score Balance</p>
+            <p id="simF1" class="text-lg font-bold text-indigo-800">65.18% (Peak F1)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-rose-50 border border-rose-200">
+            <p class="text-[11px] text-rose-700 font-semibold">Missed Churners (FN)</p>
+            <p id="simFN" class="text-lg font-bold text-rose-800">81 (TN: 803)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <p class="text-[11px] text-amber-800 font-semibold">Simulated Net Campaign ROI</p>
+            <p id="simROI" class="text-lg font-bold text-amber-900">+$30,825</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts 11, 12, 13 Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Chart 11: ROC & PR Benchmark -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700">Visual 11</span>
+            <span class="text-xs text-slate-400">11_model_roc_pr_curves.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">5-Fold CV &amp; Test ROC-AUC / PR-AUC</h3>
+          <p class="text-xs text-slate-500 mb-3">Both models generalize strongly from 5-fold CV (n=5,634) to the held-out test fold (N=1,409), achieving ~0.86 ROC-AUC and ~0.685 PR-AUC.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart11ModelComp"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 12: Threshold Curve -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-50 text-teal-700">Visual 12</span>
+            <span class="text-xs text-slate-400">12_threshold_optimization.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Precision, Recall &amp; F1 Across Thresholds</h3>
+          <p class="text-xs text-slate-500 mb-3">Lowering the threshold from 0.50 to <strong class="text-slate-800">0.30–0.32</strong> lifts recall from 53.74% to <strong class="text-slate-800">75.40%–78.34%</strong> while maximizing F1 (65.18%).</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart12Threshold"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 13: Feature Importance -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-50 text-purple-700">Visual 13</span>
+              <select id="featModelSelect" class="text-[11px] bg-slate-100 border border-slate-300 rounded px-1.5 py-0.5 font-semibold text-slate-700">
+                <option value="rf">Random Forest Gini (%)</option>
+                <option value="lr">LogReg Standardized Coeff</option>
+              </select>
+            </div>
+            <span class="text-xs text-slate-400">13_feature_importance_top15.png</span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Top 10 Predictive Features</h3>
+          <p class="text-xs text-slate-500 mb-3">Customer tenure, Month-to-month contract, missing Online Security/Tech Support, and Fiber Optic service dominate both models.</p>
+          <div class="relative h-64 w-full mt-auto">
+            <canvas id="chart13Features"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 4: RETENTION WORKBENCH & CODE ARCHITECTURE                     -->
+    <!-- =================================================================== -->
+    <div id="viewWorkbench" class="tab-view hidden space-y-6">
+      <!-- Interactive Filter Bar for Summary_Segment_KPIs.csv -->
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Power BI Star-Schema Explorer</span>
+            <h2 class="text-base font-bold text-slate-900 mt-1">Segment Risk &amp; Revenue Exposure Workbench (<code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Summary_Segment_KPIs.csv</code>)</h2>
+            <p class="text-xs text-slate-500">Filter the 20 pre-aggregated cohorts exported by <code class="bg-slate-100 px-1 rounded">src/export_powerbi.py</code> by Risk Tier, Contract Type, or Internet Service.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <select id="filterRisk" class="text-xs bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 font-medium text-slate-800">
+              <option value="ALL">All Risk Tiers</option>
+              <option value="High Risk">High Risk (&ge;0.60)</option>
+              <option value="Medium Risk">Medium Risk (0.35–0.59)</option>
+              <option value="Low Risk">Low Risk (&lt;0.35)</option>
+            </select>
+            <select id="filterContract" class="text-xs bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 font-medium text-slate-800">
+              <option value="ALL">All Contracts</option>
+              <option value="Month-to-month">Month-to-month</option>
+              <option value="One year">One year</option>
+              <option value="Two year">Two year</option>
+            </select>
+            <select id="filterInternet" class="text-xs bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 font-medium text-slate-800">
+              <option value="ALL">All Internet Tiers</option>
+              <option value="Fiber optic">Fiber optic</option>
+              <option value="DSL">DSL</option>
+              <option value="No">No Internet</option>
+            </select>
+            <button id="resetFiltersBtn" type="button" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold px-3 py-1.5 rounded-lg transition">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtered Summary Ribbon -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-[11px] text-slate-500 font-semibold">Filtered Customers</span>
+            <p id="wbCustomers" class="text-base font-bold text-slate-900">7,043</p>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-500 font-semibold">Filtered Churned</span>
+            <p id="wbChurned" class="text-base font-bold text-red-600">1,869 (26.54%)</p>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-500 font-semibold">Filtered Total MRR</span>
+            <p id="wbTotalMRR" class="text-base font-bold text-slate-900">$456,116.60</p>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-500 font-semibold">Expected Monthly Loss E[Loss]</span>
+            <p id="wbExpLoss" class="text-base font-bold text-orange-600">$139,125.19</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Table -->
+        <div class="overflow-x-auto max-h-96">
+          <table class="w-full text-left border-collapse">
+            <thead class="sticky top-0 bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase">
+              <tr>
+                <th class="py-2.5 px-3">Lifecycle Segment</th>
+                <th class="py-2.5 px-3">Contract</th>
+                <th class="py-2.5 px-3">Internet</th>
+                <th class="py-2.5 px-3">Risk Tier</th>
+                <th class="py-2.5 px-3 text-right">Customers</th>
+                <th class="py-2.5 px-3 text-right">Churned</th>
+                <th class="py-2.5 px-3 text-right">Churn %</th>
+                <th class="py-2.5 px-3 text-right">Total MRR</th>
+                <th class="py-2.5 px-3 text-right">Churned MRR</th>
+                <th class="py-2.5 px-3 text-right">Expected Loss</th>
+                <th class="py-2.5 px-3 text-right">Avg Prob</th>
+              </tr>
+            </thead>
+            <tbody id="workbenchTableBody" class="text-xs divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Repository Code & SQL Pipeline Architecture Summary -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Python Modular Pipeline (<code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">src/</code>)</h3>
+          <ul class="space-y-2.5 text-xs text-slate-600">
+            <li><strong class="text-slate-900">1. src/config.py:</strong> Pydantic <code class="bg-slate-100 px-1 rounded">BaseModel</code> settings for SQLite/PostgreSQL paths, random seed (42), 80/20 split, 5-fold CV, decision threshold (0.32), and visual palette.</li>
+            <li><strong class="text-slate-900">2. src/database.py &amp; src/inspect_data.py:</strong> Dual SQLite/Postgres manager ingesting 7,043 rows into <code class="bg-slate-100 px-1 rounded">customer_churn_raw</code> and flagging 11 whitespace strings in <code class="bg-slate-100 px-1 rounded">TotalCharges</code> where <code class="bg-slate-100 px-1 rounded">tenure == 0</code>.</li>
+            <li><strong class="text-slate-900">3. src/clean_data.py:</strong> Coerces blank <code class="bg-slate-100 px-1 rounded">TotalCharges</code> to <code class="bg-slate-100 px-1 rounded">0.0</code>, encodes binary flags, and engineers <code class="bg-slate-100 px-1 rounded">tenure_group</code>, <code class="bg-slate-100 px-1 rounded">customer_segment</code>, and <code class="bg-slate-100 px-1 rounded">addon_services_count</code> (0–6).</li>
+            <li><strong class="text-slate-900">4. src/eda.py:</strong> Computes segment KPIs and renders Visuals 01–10 at 300 DPI.</li>
+            <li><strong class="text-slate-900">5. src/train_model.py &amp; src/evaluate_model.py:</strong> Fits leak-free <code class="bg-slate-100 px-1 rounded">ColumnTransformer</code> (4 numeric + 43 one-hot features) with Logistic Regression &amp; Random Forest; generates Visuals 11–13 and threshold tables.</li>
+            <li><strong class="text-slate-900">6. src/predict_customers.py &amp; src/export_powerbi.py:</strong> Scores all 7,043 customers (<code class="bg-slate-100 px-1 rounded">Expected_Monthly_Revenue_Loss = MonthlyCharges * Churn_Probability</code>) and exports the 5-table Power BI Star Schema.</li>
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Executive Retention Roadmap &amp; Quantified Impact</h3>
+          <div class="space-y-2.5 text-xs text-slate-600">
+            <div class="p-2.5 rounded-lg bg-red-50/70 border border-red-200">
+              <p class="font-bold text-red-900">Priority 1: Month-to-Month &rarr; 1-Year Contract Migration</p>
+              <p class="mt-0.5">Target 3,875 M2M users (42.71% churn, $120.8K MRR lost) with a 1-month bill credit or $10/mo discount at day 90.</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-orange-50/70 border border-orange-200">
+              <p class="font-bold text-orange-900">Priority 2: Fiber Optic Tech Support &amp; Security Bundle</p>
+              <p class="mt-0.5">Target 1,859 Fiber users lacking security/support (41.89% Fiber churn, $114.3K MRR lost) with a 6-month complimentary bundle.</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200">
+              <p class="font-bold text-amber-900">Priority 3: Electronic Check &rarr; Auto-Pay Conversion</p>
+              <p class="mt-0.5">Target 2,365 Electronic check users (45.29% churn, $84.3K MRR lost) with a $5/mo Auto-Pay discount.</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-teal-50/70 border border-teal-200">
+              <p class="font-bold text-teal-900">Priority 4: First-Year (0–12m) Onboarding Cadence</p>
+              <p class="mt-0.5">Deploy automated Day 15/45/90 health checks for 2,186 first-year users (47.44% churn) with risk score &gt; 0.32.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 mt-8 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+      <span>Repository Analysis: <strong>turbodeva64-spec/customer-churn-intelligence</strong></span>
+      <span>7,043 Customers | 13 Charts Analyzed | Star Schema + ML Pipeline Verified</span>
+    </div>
+  </footer>
+
+  <script>
+    // =========================================================================
+    // REPOSITORY GROUNDED DATA STORE
+    // =========================================================================
+    const contractData = {
+      labels: ['Month-to-month (n=3,875)', 'One year (n=1,473)', 'Two year (n=1,695)'],
+      churnRate: [42.71, 11.27, 2.83],
+      mrrShare: [86.86, 10.15, 2.99],
+      churnedMRR: [120847.10, 14118.45, 4165.30],
+      retainedMRR: [136447.05, 81698.15, 98840.55],
+      churnedCount: [1655, 166, 48],
+      retainedCount: [2220, 1307, 1647]
+    };
+
+    const tenureData = {
+      labels: ['0-12 Months (n=2,186)', '13-24 Months (n=1,024)', '25-48 Months (n=1,594)', '49-72 Months (n=2,239)'],
+      churnRate: [47.44, 28.71, 20.39, 9.51],
+      mrrShare: [49.56, 16.59, 19.74, 14.11],
+      churnedMRR: [68954.25, 23081.65, 27462.50, 19632.45],
+      retainedMRR: [53675.50, 39748.20, 77630.80, 145931.25],
+      churnedCount: [1037, 294, 325, 213],
+      retainedCount: [1149, 730, 1269, 2026]
+    };
+
+    const paymentData = {
+      labels: ['Electronic check (n=2,365)', 'Mailed check (n=1,612)', 'Bank transfer auto (n=1,544)', 'Credit card auto (n=1,522)'],
+      churnRate: [45.29, 19.11, 16.71, 15.24],
+      mrrShare: [60.58, 12.08, 14.86, 12.48],
+      churnedMRR: [84288.75, 16803.60, 20673.10, 17365.40],
+      retainedMRR: [96056.25, 53990.70, 83072.35, 83866.45],
+      churnedCount: [1071, 308, 258, 232],
+      retainedCount: [1294, 1304, 1286, 1290]
+    };
+
+    const internetData = {
+      labels: ['Fiber optic (n=3,096)', 'DSL (n=2,421)', 'No Internet (n=1,526)'],
+      churnRate: [41.89, 18.96, 7.40],
+      mrrShare: [82.15, 16.19, 1.65],
+      churnedMRR: [114300.05, 22529.20, 2301.60],
+      retainedMRR: [168984.35, 118136.15, 29865.25],
+      churnedCount: [1297, 459, 113],
+      retainedCount: [1799, 1962, 1413]
+    };
+
+    const thresholdTable = [
+      { th: 0.20, flagged: 694, share: 49.3, tp: 332, fp: 362, fn: 42,  tn: 673,  prec: 47.84, rec: 88.77, f1: 62.17 },
+      { th: 0.25, flagged: 602, share: 42.7, tp: 312, fp: 290, fn: 62,  tn: 745,  prec: 51.83, rec: 83.42, f1: 63.93 },
+      { th: 0.30, flagged: 525, share: 37.3, tp: 293, fp: 232, fn: 81,  tn: 803,  prec: 55.81, rec: 78.34, f1: 65.18 },
+      { th: 0.35, flagged: 460, share: 32.6, tp: 268, fp: 192, fn: 106, tn: 843,  prec: 58.26, rec: 71.66, f1: 64.27 },
+      { th: 0.40, flagged: 400, share: 28.4, tp: 246, fp: 154, fn: 128, tn: 881,  prec: 61.50, rec: 65.78, f1: 63.57 },
+      { th: 0.45, flagged: 341, share: 24.2, tp: 218, fp: 123, fn: 156, tn: 912,  prec: 63.93, rec: 58.29, f1: 60.98 },
+      { th: 0.50, flagged: 291, share: 20.7, tp: 201, fp: 90,  fn: 173, tn: 945,  prec: 69.07, rec: 53.74, f1: 60.45 },
+      { th: 0.55, flagged: 240, share: 17.0, tp: 176, fp: 64,  fn: 198, tn: 971,  prec: 73.33, rec: 47.06, f1: 57.33 },
+      { th: 0.60, flagged: 187, share: 13.3, tp: 145, fp: 42,  fn: 229, tn: 993,  prec: 77.54, rec: 38.77, f1: 51.69 },
+      { th: 0.70, flagged: 81,  share: 5.7,  tp: 66,  fp: 15,  fn: 308, tn: 1020, prec: 81.48, rec: 17.65, f1: 29.01 }
+    ];
+
+    const summarySegments = [
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "Fiber optic", risk: "High Risk", count: 676, churned: 535, mrr: 55784.80, churnMrr: 44349.25, expLoss: 39576.96, prob: 0.7094 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "Fiber optic", risk: "Medium Risk", count: 806, churned: 414, mrr: 72251.40, churnMrr: 37448.10, expLoss: 33783.81, prob: 0.4680 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "Fiber optic", risk: "Medium Risk", count: 240, churned: 108, mrr: 19398.35, churnMrr: 8829.05, expLoss: 10384.69, prob: 0.5353 },
+      { seg: "One-Year Contract", contract: "One year", internet: "Fiber optic", risk: "Low Risk", count: 531, churned: 100, mrr: 52455.10, churnMrr: 10163.90, expLoss: 10204.93, prob: 0.1927 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "DSL", risk: "Medium Risk", count: 391, churned: 204, mrr: 17709.35, churnMrr: 9281.10, expLoss: 8222.80, prob: 0.4667 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "Fiber optic", risk: "Low Risk", count: 340, churned: 57, mrr: 31564.95, churnMrr: 5372.75, expLoss: 8950.01, prob: 0.2835 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "DSL", risk: "Low Risk", count: 509, churned: 86, mrr: 27429.50, churnMrr: 4411.65, expLoss: 5501.79, prob: 0.2067 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "Fiber optic", risk: "High Risk", count: 66, churned: 48, mrr: 6181.60, churnMrr: 4482.85, expLoss: 3871.14, prob: 0.6259 },
+      { seg: "Two-Year Contract", contract: "Two year", internet: "Fiber optic", risk: "Low Risk", count: 429, churned: 31, mrr: 44861.15, churnMrr: 3246.10, expLoss: 4250.14, prob: 0.0949 },
+      { seg: "One-Year Contract", contract: "One year", internet: "DSL", risk: "Low Risk", count: 570, churned: 53, mrr: 34996.15, churnMrr: 3356.25, expLoss: 3781.22, prob: 0.1074 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "DSL", risk: "Low Risk", count: 256, churned: 51, mrr: 13871.95, churnMrr: 2751.65, expLoss: 3741.19, prob: 0.2729 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "No", risk: "Low Risk", count: 367, churned: 73, mrr: 7442.25, churnMrr: 1469.70, expLoss: 1518.83, prob: 0.2046 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "DSL", risk: "High Risk", count: 43, churned: 38, mrr: 1458.40, churnMrr: 1319.15, expLoss: 973.22, prob: 0.6688 },
+      { seg: "Two-Year Contract", contract: "Two year", internet: "DSL", risk: "Low Risk", count: 628, churned: 12, mrr: 44250.75, churnMrr: 805.70, expLoss: 1384.58, prob: 0.0329 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "DSL", risk: "Medium Risk", count: 24, churned: 15, mrr: 949.25, churnMrr: 603.70, expLoss: 363.27, prob: 0.3832 },
+      { seg: "One-Year Contract", contract: "One year", internet: "Fiber optic", risk: "Medium Risk", count: 8, churned: 4, mrr: 787.05, churnMrr: 408.05, expLoss: 304.15, prob: 0.3853 },
+      { seg: "New Month-to-Month (<=12m)", contract: "Month-to-month", internet: "No", risk: "Medium Risk", count: 21, churned: 15, mrr: 421.40, churnMrr: 301.55, expLoss: 156.65, prob: 0.3717 },
+      { seg: "Established Month-to-Month (>12m)", contract: "Month-to-month", internet: "No", risk: "Low Risk", count: 136, churned: 11, mrr: 2830.95, churnMrr: 226.60, expLoss: 289.19, prob: 0.1025 },
+      { seg: "One-Year Contract", contract: "One year", internet: "No", risk: "Low Risk", count: 364, churned: 9, mrr: 7578.30, churnMrr: 190.25, expLoss: 218.81, prob: 0.0286 },
+      { seg: "Two-Year Contract", contract: "Two year", internet: "No", risk: "Low Risk", count: 638, churned: 5, mrr: 13893.95, churnMrr: 113.50, expLoss: 161.00, prob: 0.0111 }
+    ];
+
+    // =========================================================================
+    // CHART INSTANCES
+    // =========================================================================
+    let chart01, chart02, chart03, chart04, chart05;
+    let chart06, chart07, chart08, chart09;
+    let chart11, chart12, chart13;
+
+    function initOverviewCharts() {
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      };
+
+      // Chart 01: Overall Donut (Customer Split vs MRR Split)
+      chart01 = new Chart(document.getElementById('chart01Overall'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Churned (26.54% Cust | 30.50% MRR)', 'Retained (73.46% Cust | 69.50% MRR)'],
+          datasets: [
+            {
+              label: 'Customer Share (%)',
+              data: [26.54, 73.46],
+              backgroundColor: ['#dc2626', '#0d9488'],
+              borderWidth: 2
+            },
+            {
+              label: 'MRR Share (%)',
+              data: [30.50, 69.50],
+              backgroundColor: ['#ea580c', '#2b5c8f'],
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          cutout: '48%'
+        }
+      });
+
+      // Chart 02: Contract
+      chart02 = new Chart(document.getElementById('chart02Contract'), {
+        type: 'bar',
+        data: getDatasetForMode(contractData, 'churn_rate'),
+        options: commonOptions
+      });
+
+      // Chart 03: Tenure Group
+      chart03 = new Chart(document.getElementById('chart03Tenure'), {
+        type: 'bar',
+        data: getDatasetForMode(tenureData, 'churn_rate'),
+        options: commonOptions
+      });
+
+      // Chart 04: Payment Method
+      chart04 = new Chart(document.getElementById('chart04Payment'), {
+        type: 'bar',
+        data: getDatasetForMode(paymentData, 'churn_rate'),
+        options: { ...commonOptions, indexAxis: 'y' }
+      });
+
+      // Chart 05: Internet Service
+      chart05 = new Chart(document.getElementById('chart05Internet'), {
+        type: 'bar',
+        data: getDatasetForMode(internetData, 'churn_rate'),
+        options: commonOptions
+      });
+    }
+
+    function getDatasetForMode(source, mode) {
+      if (mode === 'churn_rate') {
+        return {
+          labels: source.labels,
+          datasets: [
+            { label: 'Churn Rate (%)', data: source.churnRate, backgroundColor: '#dc2626', borderRadius: 4 },
+            { label: 'Share of Total Churned MRR (%)', data: source.mrrShare, backgroundColor: '#2b5c8f', borderRadius: 4 }
+          ]
+        };
+      } else if (mode === 'mrr_dollars') {
+        return {
+          labels: source.labels,
+          datasets: [
+            { label: 'Churned MRR ($)', data: source.churnedMRR, backgroundColor: '#ea580c', borderRadius: 4 },
+            { label: 'Retained MRR ($)', data: source.retainedMRR, backgroundColor: '#0d9488', borderRadius: 4 }
+          ]
+        };
+      } else {
+        return {
+          labels: source.labels,
+          datasets: [
+            { label: 'Churned Customers', data: source.churnedCount, backgroundColor: '#dc2626', borderRadius: 4 },
+            { label: 'Retained Customers', data: source.retainedCount, backgroundColor: '#2b5c8f', borderRadius: 4 }
+          ]
+        };
+      }
+    }
+
+    function initSegmentCharts() {
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      };
+
+      // Chart 06: Monthly Charges Density Curve Approximation across billing brackets
+      chart06 = new Chart(document.getElementById('chart06MonthlyDist'), {
+        type: 'line',
+        data: {
+          labels: ['$18-$25', '$26-$40', '$41-$55', '$56-$70', '$71-$85', '$86-$100', '$101-$119'],
+          datasets: [
+            {
+              label: 'Churned Customers (%)',
+              data: [5.8, 6.4, 11.2, 15.6, 28.5, 23.8, 8.7],
+              borderColor: '#dc2626',
+              backgroundColor: 'rgba(220, 38, 38, 0.15)',
+              fill: true,
+              tension: 0.35
+            },
+            {
+              label: 'Retained Customers (%)',
+              data: [28.4, 8.9, 13.5, 14.8, 14.9, 12.1, 7.4],
+              borderColor: '#0d9488',
+              backgroundColor: 'rgba(13, 148, 136, 0.12)',
+              fill: true,
+              tension: 0.35
+            }
+          ]
+        },
+        options: commonOptions
+      });
+
+      // Chart 07: Tenure Distribution Curve across tenure brackets
+      chart07 = new Chart(document.getElementById('chart07TenureDist'), {
+        type: 'line',
+        data: {
+          labels: ['1-6m', '7-12m', '13-24m', '25-36m', '37-48m', '49-60m', '61-72m'],
+          datasets: [
+            {
+              label: 'Churned Share (%)',
+              data: [38.9, 16.6, 15.7, 9.8, 7.6, 6.4, 5.0],
+              borderColor: '#dc2626',
+              backgroundColor: 'rgba(220, 38, 38, 0.15)',
+              fill: true,
+              tension: 0.35
+            },
+            {
+              label: 'Retained Share (%)',
+              data: [13.2, 9.0, 14.1, 12.8, 11.7, 13.5, 25.7],
+              borderColor: '#2b5c8f',
+              backgroundColor: 'rgba(43, 92, 143, 0.12)',
+              fill: true,
+              tension: 0.35
+            }
+          ]
+        },
+        options: commonOptions
+      });
+
+      // Chart 08: Customer Lifecycle Segments
+      chart08 = new Chart(document.getElementById('chart08Segments'), {
+        type: 'bar',
+        data: {
+          labels: [
+            'New M2M <=12m (n=1,994)',
+            'Est. M2M >12m (n=1,881)',
+            'One-Year (n=1,473)',
+            'Two-Year (n=1,695)'
+          ],
+          datasets: [
+            {
+              label: 'Churn Rate (%)',
+              data: [51.35, 33.55, 11.27, 2.83],
+              backgroundColor: ['#dc2626', '#ea580c', '#2b5c8f', '#0d9488'],
+              borderRadius: 4
+            },
+            {
+              label: 'Share of Churned MRR (%)',
+              data: [48.93, 37.93, 10.15, 2.99],
+              backgroundColor: '#64748b',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: commonOptions
+      });
+
+      // Chart 09: Security & Tech Support Impact
+      chart09 = new Chart(document.getElementById('chart09Security'), {
+        type: 'bar',
+        data: {
+          labels: [
+            'OnlineSecurity = No (n=3,498)',
+            'OnlineSecurity = Yes (n=2,019)',
+            'TechSupport = No (n=3,473)',
+            'TechSupport = Yes (n=2,044)'
+          ],
+          datasets: [
+            {
+              label: 'Churn Rate (%)',
+              data: [41.77, 14.61, 41.64, 15.17],
+              backgroundColor: ['#dc2626', '#0d9488', '#ea580c', '#0d9488'],
+              borderRadius: 4
+            },
+            {
+              label: 'Churned MRR Share (%)',
+              data: [81.05, 17.30, 79.57, 18.77],
+              backgroundColor: '#1e3a8a',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: commonOptions
+      });
+    }
+
+    function initMLCharts() {
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      };
+
+      // Chart 11: Model Benchmark
+      chart11 = new Chart(document.getElementById('chart11ModelComp'), {
+        type: 'bar',
+        data: {
+          labels: ['CV ROC-AUC', 'Test ROC-AUC', 'CV PR-AUC', 'Test PR-AUC', 'Test Accuracy', 'Test F1 (@0.50)'],
+          datasets: [
+            {
+              label: 'Logistic Regression (%)',
+              data: [84.24, 85.75, 64.97, 68.43, 81.33, 60.45],
+              backgroundColor: '#2b5c8f',
+              borderRadius: 4
+            },
+            {
+              label: 'Random Forest (%)',
+              data: [84.32, 86.51, 65.99, 68.69, 80.84, 57.68],
+              backgroundColor: '#0d9488',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: commonOptions
+      });
+
+      // Chart 12: Threshold Curve
+      chart12 = new Chart(document.getElementById('chart12Threshold'), {
+        type: 'line',
+        data: {
+          labels: thresholdTable.map(d => d.th.toFixed(2)),
+          datasets: [
+            { label: 'Recall (%)', data: thresholdTable.map(d => d.rec), borderColor: '#dc2626', tension: 0.25 },
+            { label: 'Precision (%)', data: thresholdTable.map(d => d.prec), borderColor: '#2b5c8f', tension: 0.25 },
+            { label: 'F1-Score (%)', data: thresholdTable.map(d => d.f1), borderColor: '#0d9488', tension: 0.25 }
+          ]
+        },
+        options: commonOptions
+      });
+
+      // Chart 13: Feature Importances
+      chart13 = new Chart(document.getElementById('chart13Features'), {
+        type: 'bar',
+        data: getFeatureImportanceData('rf'),
+        options: { ...commonOptions, indexAxis: 'y' }
+      });
+    }
+
+    function getFeatureImportanceData(modelType) {
+      if (modelType === 'rf') {
+        return {
+          labels: [
+            'tenure', 'Contract_Month-to-month', 'OnlineSecurity_No', 'TotalCharges',
+            'TechSupport_No', 'InternetService_Fiber optic', 'Contract_Two year',
+            'Payment_Electronic check', 'MonthlyCharges', 'InternetService_DSL'
+          ],
+          datasets: [{
+            label: 'Random Forest Gini Importance (%)',
+            data: [15.40, 13.12, 8.47, 8.01, 7.40, 6.39, 4.93, 4.55, 4.37, 3.04],
+            backgroundColor: [
+              '#0d9488', '#dc2626', '#ea580c', '#2b5c8f', '#ea580c',
+              '#dc2626', '#0d9488', '#ea580c', '#2b5c8f', '#0d9488'
+            ],
+            borderRadius: 4
+          }]
+        };
+      } else {
+        return {
+          labels: [
+            'tenure (-1.49)', 'TotalCharges (+0.71)', 'Contract_Two year (-0.67)',
+            'Contract_M2M (+0.63)', 'Internet_Fiber (+0.60)', 'Internet_DSL (-0.47)',
+            'MonthlyCharges (-0.38)', 'TechSupport_No (+0.25)', 'Payment_ECheck (+0.25)',
+            'OnlineSecurity_No (+0.22)'
+          ],
+          datasets: [{
+            label: 'LogReg Standardized Coefficient (Log-Odds)',
+            data: [-1.4941, 0.7085, -0.6692, 0.6298, 0.6006, -0.4662, -0.3834, 0.2521, 0.2485, 0.2219],
+            backgroundColor: [
+              '#0d9488', '#dc2626', '#0d9488', '#dc2626', '#dc2626',
+              '#0d9488', '#0d9488', '#ea580c', '#ea580c', '#ea580c'
+            ],
+            borderRadius: 4
+          }]
+        };
+      }
+    }
+
+    // =========================================================================
+    // INTERACTIVE CONTROLS & EVENT LISTENERS
+    // =========================================================================
+    function updateSimulator(idx) {
+      const row = thresholdTable[idx];
+      document.getElementById('thresholdBadge').textContent = row.th.toFixed(2);
+      document.getElementById('simFlagged').textContent = `${row.flagged} (${row.share.toFixed(1)}%)`;
+      document.getElementById('simRecall').textContent = `${row.rec.toFixed(2)}% (TP: ${row.tp})`;
+      document.getElementById('simPrecision').textContent = `${row.prec.toFixed(2)}% (FP: ${row.fp})`;
+      document.getElementById('simF1').textContent = `${row.f1.toFixed(2)}%`;
+      document.getElementById('simFN').textContent = `${row.fn} (TN: ${row.tn})`;
+      // Net Campaign Benefit: TP * $125 net gain - FP * $25 outreach cost
+      const netBenefit = (row.tp * 125) - (row.fp * 25);
+      document.getElementById('simROI').textContent = `+$${netBenefit.toLocaleString()}`;
+    }
+
+    function renderWorkbenchTable() {
+      const riskFilter = document.getElementById('filterRisk').value;
+      const contractFilter = document.getElementById('filterContract').value;
+      const internetFilter = document.getElementById('filterInternet').value;
+
+      const filtered = summarySegments.filter(item => {
+        const rMatch = (riskFilter === 'ALL') || (item.risk === riskFilter);
+        const cMatch = (contractFilter === 'ALL') || (item.contract === contractFilter);
+        const iMatch = (internetFilter === 'ALL') || (item.internet === internetFilter);
+        return rMatch && cMatch && iMatch;
+      });
+
+      const tbody = document.getElementById('workbenchTableBody');
+      tbody.innerHTML = '';
+
+      let totalCust = 0, totalChurn = 0, totalMrr = 0, totalExpLoss = 0;
+
+      filtered.forEach(row => {
+        totalCust += row.count;
+        totalChurn += row.churned;
+        totalMrr += row.mrr;
+        totalExpLoss += row.expLoss;
+
+        const churnPct = (row.churned / row.count * 100).toFixed(1);
+        const badgeClass = row.risk === 'High Risk'
+          ? 'bg-red-100 text-red-800 border-red-200'
+          : (row.risk === 'Medium Risk' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-medium text-slate-900">${row.seg}</td>
+          <td class="py-2.5 px-3 text-slate-600">${row.contract}</td>
+          <td class="py-2.5 px-3 text-slate-600">${row.internet}</td>
+          <td class="py-2.5 px-3"><span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}">${row.risk}</span></td>
+          <td class="py-2.5 px-3 text-right font-medium">${row.count.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-red-600 font-semibold">${row.churned.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold">${churnPct}%</td>
+          <td class="py-2.5 px-3 text-right">$${row.mrr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-2.5 px-3 text-right text-red-700">$${row.churnMrr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-2.5 px-3 text-right font-semibold text-orange-700">$${row.expLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-2.5 px-3 text-right font-mono">${(row.prob * 100).toFixed(1)}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const aggRate = totalCust > 0 ? (totalChurn / totalCust * 100).toFixed(2) : '0.00';
+      document.getElementById('wbCustomers').textContent = totalCust.toLocaleString();
+      document.getElementById('wbChurned').textContent = `${totalChurn.toLocaleString()} (${aggRate}%)`;
+      document.getElementById('wbTotalMRR').textContent = `$${totalMrr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('wbExpLoss').textContent = `$${totalExpLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initOverviewCharts();
+      initSegmentCharts();
+      initMLCharts();
+      updateSimulator(2);
+      renderWorkbenchTable();
+
+      // Tab Switching
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabViews = document.querySelectorAll('.tab-view');
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabButtons.forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('text-slate-300');
+          });
+          btn.classList.add('active');
+          btn.classList.remove('text-slate-300');
+
+          const targetId = btn.getAttribute('data-target');
+          tabViews.forEach(v => {
+            if (v.id === targetId) {
+              v.classList.remove('hidden');
+            } else {
+              v.classList.add('hidden');
+            }
+          });
+        });
+      });
+
+      // Metric Switcher on View 1
+      document.getElementById('edaMetricSelect').addEventListener('change', (e) => {
+        const mode = e.target.value;
+        chart02.data = getDatasetForMode(contractData, mode);
+        chart02.update();
+        chart03.data = getDatasetForMode(tenureData, mode);
+        chart03.update();
+        chart04.data = getDatasetForMode(paymentData, mode);
+        chart04.update();
+        chart05.data = getDatasetForMode(internetData, mode);
+        chart05.update();
+      });
+
+      // Heatmap Cell Click Inspector
+      document.querySelectorAll('.heatmap-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const cohort = cell.getAttribute('data-cohort');
+          const rate = cell.getAttribute('data-rate');
+          const detail = cell.getAttribute('data-detail');
+          document.getElementById('heatmapInspector').innerHTML =
+            `Selected Cohort: <strong class="text-slate-900">${cohort}</strong> &rarr; <span class="text-red-600 font-bold">${rate} Churn Rate</span> (${detail})`;
+        });
+      });
+
+      // Threshold Slider
+      document.getElementById('thresholdSlider').addEventListener('input', (e) => {
+        updateSimulator(parseInt(e.target.value, 10));
+      });
+
+      // Feature Importance Model Selector
+      document.getElementById('featModelSelect').addEventListener('change', (e) => {
+        chart13.data = getFeatureImportanceData(e.target.value);
+        chart13.update();
+      });
+
+      // Workbench Filters
+      ['filterRisk', 'filterContract', 'filterInternet'].forEach(id => {
+        document.getElementById(id).addEventListener('change', renderWorkbenchTable);
+      });
+      document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+        document.getElementById('filterRisk').value = 'ALL';
+        document.getElementById('filterContract').value = 'ALL';
+        document.getElementById('filterInternet').value = 'ALL';
+        renderWorkbenchTable();
+      });
+    });
+  </script>
+</body>
+</html>
