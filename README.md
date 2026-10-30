@@ -1,3 +1,5 @@
+<img width="1255" height="800" alt="Screenshot 2026-10-30 180529" src="https://github.com/user-attachments/assets/61a811d0-98b8-46f2-8193-1859b4649041" />
+<img width="1093" height="872" alt="Screenshot 2026-10-30 180547" src="https://github.com/user-attachments/assets/d05c037f-6938-46da-9710-71378cfd6b9b" />
 # Customer Churn Intelligence: End-to-End SQL, Python, ML & Power BI Portfolio Project
 
 ![Overall Churn Rate](visuals/01_overall_churn_rate.png)
